@@ -1,4 +1,5 @@
 from cmu_graphics import *
+from PIL import Image
 
 def onAppStart(app):
     app.gamemode = 'desktopInitialize'
@@ -13,6 +14,10 @@ def onAppStart(app):
     app.frameCount = 0  
     app.fireboystatus = 'stand'
     app.icegirlstatus = 'stand'
+    app.levelselected = 1
+    app.level1 = True
+    app.level2 = False
+    app.level3 = False
 
 def onStep(app):
     app.frameCount += 1
@@ -24,12 +29,16 @@ def onStep(app):
 def redrawAll(app):
     if app.gamemode == 'desktopInitialize' :
         desktopInitialize(app)
-    #elif app.gamemode == 'levelSelection':
+    elif app.gamemode == 'levelSelection':
+        levelSelection(app)
 
-#def onKeyPress(app, keys):
-    #if app.gamemode == 'desktopInitialize':
-        #if key == 'up':
-            #app.gamemode = 'levelSelection'
+def onKeyPress(app, keys):
+    if app.gamemode == 'desktopInitialize':
+        if keys == 'up':
+            app.gamemode = 'levelSelection'
+    if app.gamemode == 'levelSelection' : 
+        if keys == 'down':
+            app.gamemode = 'desktopInitialize'
     
 
 
@@ -70,8 +79,33 @@ def desktopInitialize(app):
     fireboystand(app)
     icegirlstand(app)
 
-#def levelSelection(app):
+def levelSelection(app):
+    #background = 'levelSelection/levelselectionBackG.jpg'
+    #drawImage(background, app.width/2, app.height/2, width=app.width, 
+                #height=app.height, align = 'center')
+    drawRect(0, 0, app.width, app.height, fill = 'black')
+    doorBoy = 'doors/doorboy.png'
+    DB = Image.open(doorBoy)
+    dbwid, dbhei = DB.size
+    drawImage(doorBoy, app.width/2 - dbwid/2-10, 
+              app.height/2+5, align = 'center')
 
+
+    doorGirl = 'doors/doorgirl.png'
+    drawImage(doorGirl, app.width/2 + dbwid/2 + 10, app.height/2 +5, 
+              align = 'center')
+    doorinside = 'doors/doorinside.png'
+
+        
+    doorout = 'doors/doorout.png'
+    DO = Image.open(doorout)
+    dowid, dohei = DO.size
+    drawImage(doorout, app.width/2 - dowid/2, app.height/2, align = 'center')
+    drawImage(doorout, app.width/2 + dowid/2, app.height/2, align = 'center')
+
+
+    #if app.doorselected == Ture:
+        #drawImage(doorinside, app.width/2 - dbwid/2)
 
 
 
