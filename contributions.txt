@@ -1,0 +1,38 @@
+Below the dashed line, for each group member, clearly specify which sections of 
+the code are predominantly your own original contributions, as described in
+the TP document: 
+https://www.cs.cmu.edu/~112/notes/term-project-and-hack112.html#personal-contributions
+
+BarryHua:
+ - Creating character's presentation in animation
+ - Creating startup desktop in the game
+ - Crop image for animations
+ - Creating levelSelection UI
+ - Creating deteching from game frozen in all levels
+ - Creating gravity in all levels
+ - Creating character's movement that binds with keys
+ - Creating Fans in Game
+ - Creating Level2 background
+ - Creating algorithm for switch to work
+ - Dugging
+
+
+CaseyXiang:
+ - Designed and coded the game background with related UI on level 0-2.
+ - Merged animation with the background for level0, level1, and level2
+ - Added features in level1: Ghost
+ - Checking collision, updating groundlevel 
+ - Motion of characters on platform and on fan
+ - Drawing door images with motion
+ - Debugging
+ 
+
+
+EvelynWang:
+- Wrote hand-tracking feature
+- Can recognize left, right, jump, and confirm controls
+- Generalized and fixed paths of .PNGs and other assets
+- Link all character actions with hand controls
+- Optimized game and CV to run smoothly (implementing threads and queues)
+- Fixed naming conventions 🧼 (turned snake_case to camelCase)
+- Debugged level properties like title, entering doors, platform positioning, etc

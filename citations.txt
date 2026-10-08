@@ -1,0 +1,50 @@
+Below the dashed line, include easily understandable and verifiable 
+citations to all the major sources you used for your project, as described
+in the TP document: 
+https://www.cs.cmu.edu/~112/notes/term-project-and-hack112.html#tp-policies
+
+In addition, your code must also include citations directly in the code that 
+make it clear where you use code that is partly or entirely not of your 
+original design, and what the source is for that code.
+------------------------------------>
+
+
+ChatGPT:
+I (Barry) used an algorithm from gpt from me to crop image evenly. I somehow can not find it in the file, 
+but for most animation, I manually checked the coordinates and import PIL and get then croped the images evenly using a for loop that changes x but same y.
+
+
+Text generate from :
+https://www.textstudio.com/logo/transparent-text-with-shadow-173
+
+All animation pictures comes from: 
+https://www.spriters-resource.com/browser_games/fireboyandwatergirltheforesttemple/
+
+All pictures in background file comes from the image pack in:
+https://make.gamefroot.com/games/remix/531696
+
+
+
+I read the official documentation for the hand-tracking model I used called MediaPipe, developed by Google:
+
+https://github.com/google-ai-edge/mediapipe/blob/master/docs/solutions/hands.md
+https://ai.google.dev/edge/mediapipe/solutions/vision/hand_landmarker/python
+
+
+I also implemented threads using the built-in Python Threads library and followed their documentation on how to
+run a daemon program in a new threads
+
+https://docs.python.org/3/library/threading.html
+https://www.geeksforgeeks.org/multithreading-python-set-1/
+
+
+I also learned a bit about DSA and more specifically about queues. I used queues to 
+store hand controls until Game.py needs them. I explained in some comments on Game.py that 
+I found the need to use queues largely because of 2 reasons:
+# 1. to avoid race conditions
+# 2. to avoid decoupling
+# queues have built-in thread synchronization, meaning that only one thread can access data at a time
+# queues also allow frames to accumulate in the queue if the main thread falls behind allowing for the game and camere to run at different FPS
+
+Here is where I learned all this:
+https://docs.python.org/3/library/queue.html
