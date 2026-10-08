@@ -31,3 +31,9 @@ and ghost edges; playtest both levels before merging.
 Next: unify static and moving platforms using collision resolution with
 previous-position checks; move all level geometry to data-driven definitions;
 extract entities, controls and rendering in small behavior-preserving steps.
+
+## Stage 2 architecture follow-up
+
+The module extraction is now implemented on the local architecture branch. See
+[ARCHITECTURE.md](ARCHITECTURE.md) for the current folder map and verification.
+Further collision resolution changes remain deferred.

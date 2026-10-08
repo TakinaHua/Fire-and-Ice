@@ -16,14 +16,23 @@ The original course repository may require course access. The synchronized files
 
 ## Running the latest version
 
-Install the dependencies in `requirements.txt` in a compatible Python environment. Run the game from its source directory so relative asset paths resolve:
+This folder now uses an isolated Python 3.13 environment with updated CMU Graphics
+and MediaPipe Tasks. Double-click **Play Fire and Ice.command**, or run:
 
 ```sh
-cd src
-python Game.py
+./.venv/bin/python src/Game.py
 ```
 
-The game uses a graphical window. Camera-based controls require webcam access.
+See [PYTHON_SETUP.md](PYTHON_SETUP.md) for editor setup, pinned dependencies,
+camera controls, verification, and restoring the saved original files.
+
+## Stage 2 architecture
+
+The current local refactor keeps `src/Game.py` as the entrypoint and splits logic
+into `engine`, `entities`, `input`, `levels`, and `rendering` packages.
+See [ARCHITECTURE.md](ARCHITECTURE.md) for module responsibilities, launch and
+headless test commands, compatibility decisions, and verification limits.
+Assets also resolve when launched from the repository root with `python src/Game.py`.
 
 ## Earlier work
 
