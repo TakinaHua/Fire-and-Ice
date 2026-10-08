@@ -7,6 +7,9 @@ import math
 import time
 import threading
 from queue import Queue
+from engine.collision import Rect, overlaps, player_hitbox, ghost_hitbox, hazard_rectangles
+from engine.physics import advance_vertical
+from engine.terrain import update_ground_levels
 
 gestureStatus = {"left_hand": None, "right_hand": None}  # this dicitonary stores the current gesture status
 showCameraWindow = False  # this flag controls whether the camera window is shown
@@ -621,11 +624,10 @@ def onStep(app):
                 app.lockedMessage = False
 
         if app.gamemode in ['levelSelection', 'level0', 'level1', 'level2']:
-            app.icegirlVelY += app.gravity
-            app.fireboyVelY += app.gravity
-
-            app.icegirly += app.icegirlVelY
-            app.fireboyy += app.fireboyVelY
+            app.icegirly, app.icegirlVelY, ice_landed = advance_vertical(
+                app.icegirly, app.icegirlVelY, app.gravity, app.icegirlground)
+            app.fireboyy, app.fireboyVelY, fire_landed = advance_vertical(
+                app.fireboyy, app.fireboyVelY, app.gravity, app.fireboyground)
             if app.fireboystatus == 'win':
                 if app.frameCount % 4 == 0:
                     if app.fireboywin < 24:
@@ -660,7 +662,7 @@ def onStep(app):
         level2initialstat(app)              
 
     if app.gamemode in ['level0', 'level1', 'level2']:
-        updategroundlevel(app)
+        update_ground_levels(app)
         onFan(app)
         checkdead(app)
         moveTrap(app)
@@ -682,56 +684,6 @@ def ghostMove(app):
             app.ghostY -= app.ghostSpeed
         elif app.ghostY <= 150 and app.ghostX < 800:
             app.ghostX += app.ghostSpeed
-
-def updategroundlevel(app):
-    if app.gamemode == 'level0' or app.gamemode == 'level1':
-        if (320 <= app.fireboyy <500 or app.platformY>185) and app.fireboyx<860:
-            app.fireboyground =350
-        if (320 <= app.icegirly <400 or app.platformY>185) and app.icegirlx<860: 
-            app.icegirlground = 350 
-        if 0 <= app.fireboyy <200 and (app.fireboyx>=180 or app.platformY<=185):
-            app.fireboyground = 150
-        if 0 <= app.icegirly <200 and (app.icegirlx>=180 or app.platformY<=185):
-            app.icegirlground = 150 
-        if ((800 <= app.fireboyx <= app.width and app.fireboyy >= 250) or 
-            (0 <= app.fireboyx <= 800 and app.fireboyy >= 400)): 
-            app.fireboyground = 655
-        if ((800 <= app.icegirlx <= app.width and app.icegirly >= 250 ) or 
-            (0 <= app.icegirlx <=800 and app.icegirly >=400)):
-            app.icegirlground = 655
-
-    if app.gamemode == 'level2':
-        
-        if ((0 <= app.fireboyx < 309 and 516<=app.fireboyy<700) or 
-            (309 <= app.fireboyx < 475 and 230 <= app.fireboyy < 700)):
-            app.fireboyground = 645
-        if ((0 <= app.icegirlx < 309 and 516 <= app.icegirly<700) or 
-            (309 <= app.icegirlx < 475 and 230 <= app.icegirly < 700)):
-            app.icegirlground = 645
-        if ((525 <= app.fireboyx < 685 and 230 <= app.fireboyy < 700) or 
-            (685 <= app.fireboyx and 516 <= app.fireboyy < 700)):
-            app.fireboyground = 645
-        if ((525 <= app.icegirlx < 685 and 230 <= app.icegirly < 700) or 
-            (685 <= app.icegirlx and 516 <= app.icegirly < 700)):
-            app.icegirlground = 645
-
- 
-        if app.fireboyx<309 and ((app.platformY1>209)or(230<=app.fireboyy<497)):
-            app.fireboyground = 460
-        if app.icegirlx<309 and ((app.platformY1>209)or(230<=app.icegirly<497)):
-            app.icegirlground = 460
-        if app.fireboyx>685 and ((app.platformY2>209)or(230<=app.fireboyy<497)):
-            app.fireboyground = 460
-        if app.icegirlx>685 and ((app.platformY2>209)or(230<=app.icegirly<497)):
-            app.icegirlground = 460
- 
-        if (app.fireboyy < 240) and ((152 <= app.fireboyx < 833) or 
-            (app.platformY1 <= 209 and app.platformY2 <= 209)):
-            app.fireboyground = 180
-
-        if (app.icegirly < 240) and ((152 <= app.icegirlx < 833) or 
-            (app.platformY1 <= 209 and app.platformY2 <= 209)):
-            app.icegirlground = 180
 
 def checkDiamond(app):
   
@@ -829,41 +781,23 @@ def onFan(app):
         onFanLevel2(app)
 
 def checkdead(app):
-    if app.gamemode  == 'level0':
-        if  400 <=app.fireboyx <= 500 and app.fireboyy >= 650:
-            app.gameFrozen = True
-        if 600 <= app.icegirlx <= 700 and app.icegirly >= 650:
-            app.gameFrozen = True
-        if ((380 <= app.icegirlx <= 480 and 350 <= app.icegirly <=370) or
-            (380 <= app.fireboyx <= 480 and 350 <= app.fireboyy <=370)):
-            app.gameFrozen = True
-
-    if app.gamemode == 'level1':
-        if ((app.fireboyx == app.ghostX and app.fireboyy == app.ghostY) or
-            (app.icegirlx == app.ghostX and app.icegirly == app.ghostY)):
-            app.gameFrozen = True
-        if app.frameCount % 4 == 3: 
-            if  400 <=app.fireboyx <= 500 and app.fireboyy >= 650:
+    """Resolve lethal collisions using rectangular hitboxes, not point equality."""
+    players = (
+        ("fireboy", player_hitbox(app.fireboyx, app.fireboyy)),
+        ("icegirl", player_hitbox(app.icegirlx, app.icegirly)),
+    )
+    for name, hitbox in players:
+        for hazard in hazard_rectangles(app.gamemode, name):
+            if overlaps(hitbox, hazard):
                 app.gameFrozen = True
-            if 600 <= app.icegirlx <= 700 and app.icegirly >= 650:
-                app.gameFrozen = True
-            if ((380 <= app.icegirlx <= 480 and 350 <= app.icegirly <=370) or
-                (380 <= app.fireboyx <= 480 and 350 <= app.fireboyy <=370)):
-                app.gameFrozen = True
+                return
 
-    if app.gamemode == 'level2':
-        if ( 185 <= app.fireboyx <= 255 and app.fireboyy >=645):
-            app.gameFrozen = True
-        if (725 <= app.icegirlx <= 810 and app.icegirly >= 645):
-            app.gameFrozen = True
-        if ((450 <= app.fireboyx <= 540 and 175 <= app.fireboyy <= 200) or 
-            (450 <= app.icegirlx <= 540 and 175 <= app.icegirly <= 200)):
-            app.gameFrozen = True
+        if app.gamemode == "level1" and app.ghostActive:
+            if overlaps(hitbox, ghost_hitbox(app.ghostX, app.ghostY)):
+                app.gameFrozen = True
+                return
 
-        if 475 <= app.fireboyx <= 525 and 230 < app.fireboyy <= 650:
-            app.gameFrozen = True
-        if 475 <= app.icegirlx <= 525 and 230 < app.icegirly <= 650:
-            app.gameFrozen = True
+
 # def updateGround(app):  
 
 def redrawAll(app):
