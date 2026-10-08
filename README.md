@@ -39,3 +39,8 @@ Assets also resolve when launched from the repository root with `python src/Game
 The root `Team project/` folder and other pre-existing root files are retained as earlier development versions. For the final team version, use `src/Game.py` above.
 
 Team attribution and external-source citations are preserved in the original files linked above.
+
+## Local Stage 1 collision work
+
+See [STAGE_1.md](STAGE_1.md) for swept collisions, moving-platform support,
+verification, and deliberate gameplay changes. Press **B** to show hitboxes.

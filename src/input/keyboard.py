@@ -1,4 +1,5 @@
 """input / keyboard extracted from the original game."""
+from engine.world import move_horizontal, jump
 from input.gestures import stopHandDetection
 from engine.state import initialstats
 from entities.players import fireboylevelselectstat, icegirllevelselectStat
@@ -15,6 +16,9 @@ def onKeyPress(app, keys):
     if app.gameFrozen and keys == 'r':
         app.gameFrozen = False
         initialstats(app)
+
+    if keys == 'b':
+        app.debugColliders = not getattr(app, 'debugColliders', False)
 
     if keys == 'h':
         if app.useHandGestures:
@@ -80,66 +84,15 @@ def onKeyPress(app, keys):
 
 
 def fireboyControl(app, keys):
-    if keys == 'right':
-        if app.gamemode == 'level2':
-            if (app.fireboyx < 475 or
-                (app.fireboyx > 525 and app.fireboyx < app.width)):
-                if app.fireboyx < app.width:
-                    app.fireboyx += 5
-                    app.fireboystatus = 'turn right'
-        else:
-            if app.fireboyx < app.width:
-                app.fireboyx += 5
-                app.fireboystatus = 'turn right'
-
-
-    if keys == 'up' and app.fireboyCanJump:
-        app.fireboyVelY = app.jumpSpeed
-        app.fireboyCanJump = False
-        app.fireboystatus = 'up'
-
-
-    if keys == 'left':
-        if app.gamemode == 'level2':
-            if (app.fireboyx < 475 or
-                (app.fireboyx > 525 and app.fireboyx < app.width)):
-                if app.fireboyx > 0:
-                    app.fireboyx -= 5
-                    app.fireboystatus = 'turn left'
-        else:
-            if app.fireboyx > 0:
-                app.fireboyx -= 5
-                app.fireboystatus = 'turn left'
+    if keys == 'right': move_horizontal(app, 'fireboy', 5)
+    elif keys == 'left': move_horizontal(app, 'fireboy', -5)
+    elif keys == 'up': jump(app, 'fireboy')
 
 
 def icegirlControl(app, keys):
-    if keys == 'd':
-        if app.gamemode == 'level2':
-            if (app.icegirlx < 475 or
-                (app.icegirlx > 525 and app.icegirlx < app.width)):
-                if app.icegirlx < app.width:
-                    app.icegirlx += 5
-                    app.icegirlstatus = 'turn right'
-        else:
-            if app.icegirlx < app.width:
-                app.icegirlx += 5
-                app.icegirlstatus = 'turn right'
-
-    if keys == 'w' and app.icegirlCanJump:
-        app.icegirlVelY = app.jumpSpeed
-        app.icegirlCanJump = False
-        app.icegirlstatus = 'up'
-
-    if keys == 'a':
-        if app.gamemode == 'level2':
-            if app.icegirlx > 525 or (app.icegirlx > 0 and app.icegirlx < 475):
-                if app.icegirlx > 0:
-                    app.icegirlx -= 5
-                    app.icegirlstatus = 'turn left'
-        else:
-            if app.icegirlx > 0:
-                app.icegirlx -= 5
-                app.icegirlstatus = 'turn left'
+    if keys == 'd': move_horizontal(app, 'icegirl', 5)
+    elif keys == 'a': move_horizontal(app, 'icegirl', -5)
+    elif keys == 'w': jump(app, 'icegirl')
 
 
 def onKeyRelease(app, keys):
@@ -150,22 +103,8 @@ def onKeyRelease(app, keys):
 
 
 def onKeyHold(app, keys):
-    if not app.gameFrozen:
-        if app.gamemode in ['levelSelection', 'level0','level1', 'level2']:
-            if 'right' in keys:
-                if app.fireboyx < app.width:
-                    app.fireboyx += 5
-                    app.fireboystatus = 'turn right'
-            if 'd' in keys:
-                if app.icegirlx < app.width:
-                    app.icegirlx += 5
-                    app.icegirlstatus = 'turn right'
-
-            if 'left' in keys:
-                if app.fireboyx > 0:
-                    app.fireboyx -= 5
-                    app.fireboystatus = 'turn left'
-            if 'a' in keys:
-                if app.icegirlx > 0:
-                    app.icegirlx -= 5
-                    app.icegirlstatus = 'turn left'
+    if not app.gameFrozen and app.gamemode in ('levelSelection', 'level0', 'level1', 'level2'):
+        for key in ('right', 'left', 'd', 'a'):
+            if key in keys:
+                if key in ('right', 'left'): fireboyControl(app, key)
+                else: icegirlControl(app, key)

@@ -61,22 +61,8 @@ def icegirllevelselectStat(app):
 
 
 def applyContinuousMovement(app):
-    # move fireboy if he's supposed to be moving
-    if app.fireboyMovingDirection == "right":
-        if app.fireboyx < app.width:
-            app.fireboyx += 5
-            app.fireboystatus = 'turn right'
-    elif app.fireboyMovingDirection == "left":
-        if app.fireboyx > 0:
-            app.fireboyx -= 5
-            app.fireboystatus = 'turn left'
-
-    # move icegirl if she's supposed to be moving
-    if app.icegirlMovingDirection == "right":
-        if app.icegirlx < app.width:
-            app.icegirlx += 5
-            app.icegirlstatus = 'turn right'
-    elif app.icegirlMovingDirection == "left":
-        if app.icegirlx > 0:
-            app.icegirlx -= 5
-            app.icegirlstatus = 'turn left'
+    from engine.world import move_horizontal
+    for name in ('fireboy', 'icegirl'):
+        direction = getattr(app, name+'MovingDirection', None)
+        if direction in ('left', 'right'):
+            move_horizontal(app, name, 5 if direction == 'right' else -5)

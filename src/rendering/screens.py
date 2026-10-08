@@ -25,6 +25,8 @@ def redrawAll(app):
 
     # Draw hand gesture indicators
     drawGestureIndicators(app)
+    if getattr(app, "debugColliders", False):
+        drawColliders(app)
 
 
 def desktopInitialize(app):
@@ -299,3 +301,16 @@ def drawGestureIndicators(app):
         drawRect(app.width/2 - 100, 90, 200, 30, fill='black', opacity=70)
         drawLabel(f"Processing 1/{app.frameProcessingRate} frames",
                   app.width/2, 105, fill='cyan')
+
+
+def drawColliders(app):
+    from levels.geometry import solids, hazards
+    from engine.world import body
+    for collider in solids(app) + hazards(app.gamemode):
+        rect = collider.rect
+        if collider.key.endswith('bound'): continue
+        color = 'red' if collider in hazards(app.gamemode) else ('cyan' if collider.one_way else 'yellow')
+        drawRect(rect.x, rect.y, rect.width, rect.height, fill=None, border=color)
+    for name in ('fireboy', 'icegirl'):
+        rect = body(app, name)
+        drawRect(rect.x, rect.y, rect.width, rect.height, fill=None, border='lime')

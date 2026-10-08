@@ -1,4 +1,5 @@
 """input / gestures extracted from the original game."""
+from engine.world import jump
 import math
 import time
 import threading
@@ -6,6 +7,7 @@ import queue
 from queue import Queue
 from input import hand_tracking
 from input.hand_tracking import HandDetector
+from input.runtime_resource import RuntimeResource
 
 gestureStatus = {"left_hand": None, "right_hand": None}
 gestureQueue = Queue(maxsize=10)
@@ -57,17 +59,15 @@ class HandGestureThread(threading.Thread):
 
 def initHandDetection(app):
     import cv2
-    app.mpHands = hand_tracking
-    app.mpDrawing = hand_tracking
     app.fireboyMovingDirection = app.icegirlMovingDirection = None
     app.showCameraWindow = False
     try:
-        app.hands = HandDetector()
+        app.hands = RuntimeResource(HandDetector())
     except Exception as error:
         print(f'Hand detection unavailable: {error}. Keyboard controls remain available.')
         app.useHandGestures = False
         return False
-    app.cap = cv2.VideoCapture(0)
+    app.cap = RuntimeResource(cv2.VideoCapture(0))
     if not app.cap.isOpened():
         print('Could not open camera. Keyboard controls remain available; press H to retry.')
         app.cap.release()
@@ -99,7 +99,7 @@ def initHandDetection(app):
     app.icegirlMovingDirection = None  # left, right, or nothing
 
     # Initialize and start the hand gesture thread
-    app.handGestureThread = HandGestureThread(app)
+    app.handGestureThread = RuntimeResource(HandGestureThread(app))
     app.handGestureThread.start()
 
     return True
@@ -137,16 +137,16 @@ def processHandGestures(app):
 
                     h, w, c = frame.shape
 
-                    wrist = handLandmarks.landmark[app.mpHands.HandLandmark.WRIST]
-                    thumbMcp = handLandmarks.landmark[app.mpHands.HandLandmark.THUMB_MCP]
-                    thumbTip = handLandmarks.landmark[app.mpHands.HandLandmark.THUMB_TIP]
-                    indexMcp = handLandmarks.landmark[app.mpHands.HandLandmark.INDEX_FINGER_MCP]
-                    indexPip = handLandmarks.landmark[app.mpHands.HandLandmark.INDEX_FINGER_PIP]
-                    indexTip = handLandmarks.landmark[app.mpHands.HandLandmark.INDEX_FINGER_TIP]
-                    middleTip = handLandmarks.landmark[app.mpHands.HandLandmark.MIDDLE_FINGER_TIP]
-                    ringTip = handLandmarks.landmark[app.mpHands.HandLandmark.RING_FINGER_TIP]
-                    pinkyTip = handLandmarks.landmark[app.mpHands.HandLandmark.PINKY_TIP]
-                    middleMcp = handLandmarks.landmark[app.mpHands.HandLandmark.MIDDLE_FINGER_MCP]
+                    wrist = handLandmarks.landmark[hand_tracking.HandLandmark.WRIST]
+                    thumbMcp = handLandmarks.landmark[hand_tracking.HandLandmark.THUMB_MCP]
+                    thumbTip = handLandmarks.landmark[hand_tracking.HandLandmark.THUMB_TIP]
+                    indexMcp = handLandmarks.landmark[hand_tracking.HandLandmark.INDEX_FINGER_MCP]
+                    indexPip = handLandmarks.landmark[hand_tracking.HandLandmark.INDEX_FINGER_PIP]
+                    indexTip = handLandmarks.landmark[hand_tracking.HandLandmark.INDEX_FINGER_TIP]
+                    middleTip = handLandmarks.landmark[hand_tracking.HandLandmark.MIDDLE_FINGER_TIP]
+                    ringTip = handLandmarks.landmark[hand_tracking.HandLandmark.RING_FINGER_TIP]
+                    pinkyTip = handLandmarks.landmark[hand_tracking.HandLandmark.PINKY_TIP]
+                    middleMcp = handLandmarks.landmark[hand_tracking.HandLandmark.MIDDLE_FINGER_MCP]
 
                     wristX, wristY = int(wrist.x * w), int(wrist.y * h)
                     thumbMcpX, thumbMcpY = int(thumbMcp.x * w), int(thumbMcp.y * h)
@@ -252,15 +252,11 @@ def processHandGestures(app):
                     if isThumbUp and not (fingersCurled and isFistUp):
                         if handedness == "Left" and currentTime - app.lastJumpTimeRight > 0.5:
                             if app.icegirlCanJump:
-                                app.icegirlVelY = app.jumpSpeed
-                                app.icegirlCanJump = False
-                                app.icegirlstatus = 'up'
+                                jump(app, 'icegirl')
                             app.lastJumpTimeRight = currentTime
                         elif handedness == "Right" and currentTime - app.lastJumpTimeLeft > 0.5:
                             if app.fireboyCanJump:
-                                app.fireboyVelY = app.jumpSpeed
-                                app.fireboyCanJump = False
-                                app.fireboystatus = 'up'
+                                jump(app, 'fireboy')
                             app.lastJumpTimeLeft = currentTime
 
                     def calculateAngle(a, b, c):
@@ -319,10 +315,10 @@ def processHandGestures(app):
 
                     if results.multi_hand_landmarks:
                         for handLandmarks in results.multi_hand_landmarks:
-                            app.mpDrawing.draw_landmarks(
+                            hand_tracking.draw_landmarks(
                                 frame,
                                 handLandmarks,
-                                app.mpHands.HAND_CONNECTIONS)
+                                hand_tracking.HAND_CONNECTIONS)
 
                     cv2.imshow('Hand Detection', frame)
                     cv2.waitKey(1)

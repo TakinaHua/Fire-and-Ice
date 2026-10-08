@@ -87,11 +87,12 @@ for name in ('onAppStart', 'onStep', 'onKeyPress', 'onKeyRelease',
 
     def test_keyboard_jump_and_landing(self):
         app = new_game()
+        app.fireboyy = 655
         keyboard.onKeyPress(app, 'up')
         self.assertEqual(app.fireboyVelY, -15)
         self.assertFalse(app.fireboyCanJump)
         onStep(app)
-        self.assertEqual(app.fireboyy, 611)
+        self.assertEqual(app.fireboyy, 641)
         for _ in range(40):
             onStep(app)
         self.assertTrue(app.fireboyCanJump)

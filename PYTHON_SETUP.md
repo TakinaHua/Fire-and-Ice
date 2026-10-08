@@ -1,7 +1,7 @@
 # Python 3.13 setup
 
 The setup in this folder now uses Python 3.13.3, CMU Graphics 2.0.5, MediaPipe
-1.1.0 (Tasks API), OpenCV contrib 5.0.0.93, NumPy 2.5.3, and Pillow 12.3.0.
+1.1.0 (Tasks API), OpenCV contrib 4.11.0.86, NumPy 2.5.3, and Pillow 12.3.0.
 The `.venv` environment is isolated from Conda base and global Python packages.
 Only OpenCV contrib is installed: it provides `cv2`, so do not also install
 `opencv-python` into this environment.
@@ -91,3 +91,15 @@ under `upgrade-backup-2026-10-08/` at their original relative paths. To roll bac
 close the game, preserve any newer edits, then copy those files back and use
 Python 3.12. The backup also contains the old camera tests. No global packages
 were changed and nothing was pushed to GitHub.
+
+## Camera startup fix
+
+CMU Graphics recursively checks app state during drawing. Camera, detector, and
+worker objects now use opaque runtime handles, keeping independently changing
+native resources outside that traversal while normal gameplay state stays checked.
+OpenCV contrib is pinned to 4.11.0.86 to avoid the duplicate SDL runtime bundled
+by OpenCV 5 on this Mac. Do not upgrade that pin without a combined graphics/camera check.
+
+Run `.venv/bin/python tools/smoke_camera.py` to exercise the real CMU renderer,
+MediaPipe model, resource hashing, H toggles, and cleanup with generated frames.
+This check does not access the webcam.

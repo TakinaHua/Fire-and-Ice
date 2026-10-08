@@ -1,6 +1,6 @@
 """Reusable axis-aligned hitbox primitives and level hazard definitions.
 
-Coordinates are screen pixels. Objects have an x/y center and rectangular extent.
+Rect coordinates are top-left screen pixels; player/ghost helpers accept centers.
 These pure helpers are independent of CMU Graphics and webcam input.
 """
 from dataclasses import dataclass
@@ -30,9 +30,9 @@ def overlaps(a: Rect, b: Rect) -> bool:
             a.y + a.height > b.y)
 
 
-# Deliberately smaller than the animated artwork: forgiving gameplay hitbox.
+# A narrow collision body with feet 25px below the existing sprite anchor.
 PLAYER_WIDTH = 22
-PLAYER_HEIGHT = 26
+PLAYER_HEIGHT = 50
 GHOST_WIDTH = 35
 GHOST_HEIGHT = 35
 
@@ -48,12 +48,77 @@ def ghost_hitbox(x, y):
 def hazard_rectangles(level, player):
     """Static lethal regions. Fireboy and Icegirl have different pool immunity.
 
-    Other platforms/sensors remain handled by the existing level logic.
+    Compatibility query backed by the level collision layers.
     """
-    if level in ("level0", "level1"):
-        pool = Rect(400, 650, 100, 60) if player == "fireboy" else Rect(600, 650, 100, 60)
-        return (pool, Rect(380, 350, 100, 20))
-    if level == "level2":
-        pool = Rect(185, 645, 70, 60) if player == "fireboy" else Rect(725, 645, 85, 60)
-        return (pool, Rect(450, 175, 90, 25), Rect(475, 230, 50, 420))
-    return ()
+    from levels.geometry import hazards
+    layer = Layer.FIRE if player == 'fireboy' else Layer.ICE
+    return tuple(c.rect for c in hazards(level) if c.mask & layer)
+
+
+# Collision categories allow geometry to opt into Fireboy/Icegirl independently.
+from enum import IntFlag
+
+
+class Layer(IntFlag):
+    FIRE = 1
+    ICE = 2
+    SOLID = 4
+    HAZARD = 8
+    ENEMY = 16
+
+
+PLAYERS = Layer.FIRE | Layer.ICE
+
+
+@dataclass(frozen=True)
+class Collider:
+    rect: Rect
+    key: str = ''
+    layer: Layer = Layer.SOLID
+    mask: Layer = PLAYERS
+    one_way: bool = False
+
+
+@dataclass(frozen=True)
+class Hit:
+    time: float
+    normal_x: int
+    normal_y: int
+
+
+def translated(rect, dx, dy):
+    return Rect(rect.x + dx, rect.y + dy, rect.width, rect.height)
+
+
+def sweep(a, dx, dy, b):
+    """Continuous AABB time of first contact in [0, 1], excluding grazing.
+
+    Initial penetration is handled separately by the resolver. Merely resting
+    against a face and moving away or parallel to it is not a new impact.
+    """
+    entries, exits = [], []
+    for start, size, speed, other, extent in (
+        (a.x, a.width, dx, b.x, b.width),
+        (a.y, a.height, dy, b.y, b.height),
+    ):
+        if abs(speed) < 1e-12:
+            if start + size <= other or start >= other + extent:
+                return None
+            entries.append(float('-inf')); exits.append(float('inf'))
+        else:
+            t1 = (other - start - size) / speed
+            t2 = (other + extent - start) / speed
+            entries.append(min(t1, t2)); exits.append(max(t1, t2))
+    enter, leave = max(entries), min(exits)
+    if enter < -1e-9 or enter > 1 or enter >= leave or leave <= 0:
+        return None
+    if entries[0] > entries[1]:
+        return Hit(max(0, enter), -1 if dx > 0 else 1, 0)
+    return Hit(max(0, enter), 0, -1 if dy > 0 else 1)
+
+
+def swept_overlap(start, end, target):
+    if overlaps(start, target) or overlaps(end, target):
+        return True
+    hit = sweep(start, end.x-start.x, end.y-start.y, target)
+    return hit is not None and hit.time < 1

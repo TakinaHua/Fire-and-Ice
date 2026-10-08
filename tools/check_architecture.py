@@ -17,6 +17,8 @@ for path in paths:
   for child in t.get_children():check(child)
  check(table)
 print(f'Static global-name check passed: {len(paths)} modules')
+if '--static-only' in sys.argv:
+ sys.exit(0)
 # Load the original function definitions only: never execute its GUI/camera imports or runApp.
 import subprocess
 source=subprocess.check_output(['git', 'show', 'ca02fca8c6433113bfd0906659ac82894ae1a7eb:src/Game.py'], cwd=root.parent, text=True)

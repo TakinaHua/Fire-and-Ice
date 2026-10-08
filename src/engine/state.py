@@ -6,6 +6,7 @@ from levels.state import level1initialstat, level2initialstat
 
 
 def initialstats(app):
+    app.debugColliders = False
     app.ghostX = 20
     app.ghostY = 655
     app.ghostSpeed = 5

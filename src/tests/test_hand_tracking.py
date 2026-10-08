@@ -71,6 +71,7 @@ class HandTrackingTests(unittest.TestCase):
 
     def test_adapted_thumb_up_keeps_right_hand_player_mapping(self):
         app = new_game()
+        app.fireboyy = 655
         app.useHandGestures = True
         app.cap = Mock()
         app.mpHands = hand_tracking

@@ -1,5 +1,8 @@
 # Stage 2: modular game architecture
 
+**Local Stage 1:** [STAGE_1.md](STAGE_1.md) describes the new continuous collision
+engine, geometry, control integration, intentional differences, and current checks.
+
 **Runtime update:** This moved copy now uses Python 3.13 and MediaPipe Tasks.
 See [PYTHON_SETUP.md](PYTHON_SETUP.md) for current setup and verification commands.
 The original extraction record below describes the pre-upgrade branch.
